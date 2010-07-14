@@ -17,7 +17,11 @@
 package com.android.launcher;
 
 import android.content.Context;
+import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.res.Resources;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
@@ -47,6 +51,11 @@ public class Folder extends LinearLayout implements DragSource, OnItemLongClickL
      * Which item is being dragged
      */
     protected ApplicationInfo mDragItem;
+    /**
+     * ADW:Theme vars
+     */
+    private int mTextColor=0;
+    private boolean useThemeTextColor=false;
 
     /**
      * Used to inflate the Workspace from XML.
@@ -70,6 +79,34 @@ public class Folder extends LinearLayout implements DragSource, OnItemLongClickL
         mCloseButton = (Button) findViewById(R.id.folder_close);
         mCloseButton.setOnClickListener(this);
         mCloseButton.setOnLongClickListener(this);
+    	//ADW: Load the specified theme
+    	String themePackage=AlmostNexusSettingsHelper.getThemePackageName(getContext(), Launcher.THEME_DEFAULT);
+    	PackageManager pm=getContext().getPackageManager();
+    	Resources themeResources=null;
+    	if(!themePackage.equals(Launcher.THEME_DEFAULT)){
+	    	try {
+				themeResources=pm.getResourcesForApplication(themePackage);
+			} catch (NameNotFoundException e) {
+				// TODO Auto-generated catch block
+				//e.printStackTrace();
+			}
+    	}
+		if(themeResources!=null){
+			//Action Buttons
+			Launcher.loadThemeResource(themeResources,themePackage,"box_launcher_top",mCloseButton,Launcher.THEME_ITEM_BACKGROUND);
+			Launcher.loadThemeResource(themeResources,themePackage,"box_launcher_bottom",mContent,Launcher.THEME_ITEM_BACKGROUND);
+			int grid_selector_id=themeResources.getIdentifier("grid_selector", "drawable", themePackage);
+			if(grid_selector_id!=0){
+				mContent.setSelector(themeResources.getDrawable(grid_selector_id));
+			}
+			int textColorId=themeResources.getIdentifier("folder_title_color", "color", themePackage);
+			if(textColorId!=0){
+				mTextColor=themeResources.getColor(textColorId);
+				mCloseButton.setTextColor(mTextColor);
+			}
+			
+		}
+        
     }
     
     public void onItemClick(AdapterView parent, View v, int position, long id) {
