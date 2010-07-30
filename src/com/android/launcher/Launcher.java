@@ -1,18 +1,21 @@
 /*
- * Copyright (C) 2008 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+*    Copyright 2010 AnderWeb (Gustavo Claramunt) <anderweb@gmail.com>
+*
+*    This file is part of ADW.Launcher.
+*
+*    ADW.Launcher is free software: you can redistribute it and/or modify
+*    it under the terms of the GNU General Public License as published by
+*    the Free Software Foundation, either version 3 of the License, or
+*    (at your option) any later version.
+*
+*    ADW.Launcher is distributed in the hope that it will be useful,
+*    but WITHOUT ANY WARRANTY; without even the implied warranty of
+*    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*    GNU General Public License for more details.
+*
+*    You should have received a copy of the GNU General Public License
+*    along with ADW.Launcher.  If not, see <http://www.gnu.org/licenses/>.
+*/
 
 package com.android.launcher;
 
@@ -330,7 +333,7 @@ public final class Launcher extends Activity implements View.OnClickListener, On
         newDrawer=AlmostNexusSettingsHelper.getDrawerNew(Launcher.this);
         setContentView(R.layout.launcher);
         setupViews();
-
+        
         registerIntentReceivers();
         registerContentObservers();
 
@@ -513,10 +516,10 @@ public final class Launcher extends Activity implements View.OnClickListener, On
         if(shouldRestart())
         	return;
         //ADW: Use custom settings to set the rotation
-        this.setRequestedOrientation(
+        /*this.setRequestedOrientation(
         		AlmostNexusSettingsHelper.getDesktopRotation(this)?
         				ActivityInfo.SCREEN_ORIENTATION_USER:ActivityInfo.SCREEN_ORIENTATION_NOSENSOR
-        );
+        );*/
         //ADW: Use custom settings to change number of columns (and rows for SlidingGrid) depending on phone rotation
         int orientation = getResources().getConfiguration().orientation;
 		if(orientation==Configuration.ORIENTATION_PORTRAIT){
@@ -1232,7 +1235,7 @@ public final class Launcher extends Activity implements View.OnClickListener, On
         }
         sModel.unbind();
         sModel.abortLoaders();
-
+        mWorkspace.unbindWidgetScrollableViews();
         getContentResolver().unregisterContentObserver(mObserver);
         getContentResolver().unregisterContentObserver(mWidgetObserver);
         unregisterReceiver(mApplicationsReceiver);
@@ -3253,12 +3256,21 @@ public final class Launcher extends Activity implements View.OnClickListener, On
 		if(AlmostNexusSettingsHelper.needsRestart(key))
 			mShouldRestart=true;
 		else{
+			//TODO: ADW Move here all the updates instead on updateAlmostNexusUI() 
 			updateAlmostNexusUI();
+			if(key.equals("desktopRotation")){
+				Log.d("LAUNCHER PREFERENCES","Desktop rotation changed");
+		        this.setRequestedOrientation(
+        		AlmostNexusSettingsHelper.getDesktopRotation(this)?
+        				ActivityInfo.SCREEN_ORIENTATION_USER:ActivityInfo.SCREEN_ORIENTATION_NOSENSOR);
+			}
+				
 		}
 	}
 	private void appwidgetReadyBroadcast(int appWidgetId, ComponentName cname) {
 		if(isScrollableAllowed()){
 			Intent ready = new Intent(LauncherIntent.Action.ACTION_READY).putExtra(
+					LauncherIntent.Extra.EXTRA_APPWIDGET_ID, appWidgetId).putExtra(
 					AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId).setComponent(cname);
 			sendBroadcast(ready);
 		}

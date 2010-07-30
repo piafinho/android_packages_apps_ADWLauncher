@@ -1,18 +1,21 @@
 /*
- * Copyright (C) 2008 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+*    Copyright 2010 AnderWeb (Gustavo Claramunt) <anderweb@gmail.com>
+*
+*    This file is part of ADW.Launcher.
+*
+*    ADW.Launcher is free software: you can redistribute it and/or modify
+*    it under the terms of the GNU General Public License as published by
+*    the Free Software Foundation, either version 3 of the License, or
+*    (at your option) any later version.
+*
+*    ADW.Launcher is distributed in the hope that it will be useful,
+*    but WITHOUT ANY WARRANTY; without even the implied warranty of
+*    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*    GNU General Public License for more details.
+*
+*    You should have received a copy of the GNU General Public License
+*    along with ADW.Launcher.  If not, see <http://www.gnu.org/licenses/>.
+*/
 
 package com.android.launcher;
 
@@ -778,7 +781,6 @@ public class LauncherModel {
                             } catch (java.net.URISyntaxException e) {
                                 continue;
                             }
-
                             if (itemType == LauncherSettings.Favorites.ITEM_TYPE_APPLICATION) {
                                 info = getApplicationInfo(manager, intent, launcher);
                             } else {
@@ -1264,31 +1266,41 @@ public class LauncherModel {
      */
     private static ApplicationInfo getApplicationInfo(PackageManager manager, Intent intent,
                                                       Context context) {
-        final ResolveInfo resolveInfo = manager.resolveActivity(intent, 0);
-
-        if (resolveInfo == null) {
+        //ADW: Changed the check to avoid bypassing SDcard apps in froyo
+    	ComponentName componentName = intent.getComponent();
+        if (componentName == null) {
             return null;
         }
+    	
+        final ResolveInfo resolveInfo = manager.resolveActivity(intent, 0);
+        /*if (resolveInfo == null) {
+            return null;
+        }*/
         //TODO:ADW Load icon from theme/iconpack
         final ApplicationInfo info = new ApplicationInfo();
-        final ActivityInfo activityInfo = resolveInfo.activityInfo;
-        String themePackage=AlmostNexusSettingsHelper.getThemePackageName(context, Launcher.THEME_DEFAULT);
-        if(themePackage.equals(Launcher.THEME_DEFAULT)){
-        	info.icon = Utilities.createIconThumbnail(activityInfo.loadIcon(manager), context);
+        if(resolveInfo!=null){
+	        final ActivityInfo activityInfo = resolveInfo.activityInfo;
+	        String themePackage=AlmostNexusSettingsHelper.getThemePackageName(context, Launcher.THEME_DEFAULT);
+	        if(themePackage.equals(Launcher.THEME_DEFAULT)){
+	        	info.icon = Utilities.createIconThumbnail(activityInfo.loadIcon(manager), context);
+	        }else{
+	        	//Drawable tmpIcon = loadIconFromTheme(context, manager, themePackage,activityInfo.packageName+"_"+activityInfo.name);
+	        	Drawable tmpIcon = loadIconFromTheme(context, manager, themePackage,activityInfo.name);
+	        	if(tmpIcon==null){
+	        		info.icon = Utilities.createIconThumbnail(activityInfo.loadIcon(manager), context);
+	        	}else{
+	        		info.icon = Utilities.createIconThumbnail(tmpIcon, context);
+	        	}
+	        }
+	        if (info.title == null || info.title.length() == 0) {
+	            info.title = activityInfo.loadLabel(manager);
+	        }
+	        if (info.title == null) {
+	            info.title = "";
+	        }
         }else{
-        	//Drawable tmpIcon = loadIconFromTheme(context, manager, themePackage,activityInfo.packageName+"_"+activityInfo.name);
-        	Drawable tmpIcon = loadIconFromTheme(context, manager, themePackage,activityInfo.name);
-        	if(tmpIcon==null){
-        		info.icon = Utilities.createIconThumbnail(activityInfo.loadIcon(manager), context);
-        	}else{
-        		info.icon = Utilities.createIconThumbnail(tmpIcon, context);
-        	}
-        }
-        if (info.title == null || info.title.length() == 0) {
-            info.title = activityInfo.loadLabel(manager);
-        }
-        if (info.title == null) {
-            info.title = "";
+        	//ADW: add default icon for apps on SD
+        	info.icon=manager.getDefaultActivityIcon();
         }
         info.itemType = LauncherSettings.Favorites.ITEM_TYPE_APPLICATION;
         return info;
