@@ -21,6 +21,7 @@ import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Resources;
 import android.graphics.Rect;
+import android.graphics.Typeface;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
@@ -105,7 +106,13 @@ public class Folder extends LinearLayout implements DragSource, OnItemLongClickL
 				mTextColor=themeResources.getColor(textColorId);
 				mCloseButton.setTextColor(mTextColor);
 			}
-			
+			Typeface themeFont=null;
+			try{
+				themeFont=Typeface.createFromAsset(themeResources.getAssets(), "themefont.ttf");
+			}catch (RuntimeException e) {
+				// TODO: handle exception
+			}
+			if(themeFont!=null)mCloseButton.setTypeface(themeFont);
 		}
         
     }
